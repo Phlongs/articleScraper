@@ -1,0 +1,15 @@
+.jumbotron {
+  text-align: center;
+  background-image: url("../images/background.jpg");
+  background-size: cover;
+}
+
+.jumbotron h1, h5 {
+  color: white;
+  font-weight: bolder;
+  text-shadow: 0 0 3px black;
+}
+
+footer {
+  text-align: center;
+}
