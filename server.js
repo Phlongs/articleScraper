@@ -28,7 +28,7 @@ app.set('view engine', 'handlebars');
 // ---------------------------------------------------------------------------------------------------------------
 // Connect to localhost if not a production environment
 if(process.env.NODE_ENV == 'production'){
-  mongoose.connect('mongodb://heroku_60zpcwg0:ubn0n27pi2856flqoedo9glvh8@ds119578.mlab.com:19578/heroku_60zpcwg0');
+  mongoose.connect('mongodb://heroku_m40mww70:aoaf7v1bjau8upg0ffvtfrefca@ds111262.mlab.com:11262/heroku_m40mww70');
 }
 else{
   mongoose.connect('mongodb://localhost/articleScraper');
