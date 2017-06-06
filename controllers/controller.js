@@ -8,106 +8,85 @@ var cheerio = require('cheerio'); // for web-scraping
 var Comment = require('../models/Comment.js');
 var Article = require('../models/Article.js');
 
-router.get('/', function (req, res){
-
+router.get('/', function(req, res) {
 
   res.redirect('/scrape');
 
 });
 
+router.get('/articles', function(req, res) {
 
-
-router.get('/articles', function (req, res){
-
-
-  Article.find().sort({_id: -1})
-
-
-    .populate('comments')
-
-
-    .exec(function(err, doc){
-      // log any errors
-      if (err){
-        console.log(err);
+  Article.find().sort({_id: -1}).populate('comments').exec(function(err, doc) {
+    // log any errors
+    if (err) {
+      console.log(err);
+    } else {
+      var hbsObject = {
+        articles: doc
       }
+      res.render('index', hbsObject);
 
-      else {
-        var hbsObject = {articles: doc}
-        res.render('index', hbsObject);
-
-      }
-    });
+    }
+  });
 
 });
-
-
 
 router.get('/scrape', function(req, res) {
 
   request('https://news.ycombinator.com/', function(error, response, html) {
 
-
     var $ = cheerio.load(html);
-
 
     var titlesArray = [];
 
     $('.title').each(function(i, element) {
 
-        var result = {};
+      var result = {};
 
-        result.title = $(this).children('a').text(); //convert to string for error handling later
+      result.title = $(this).children('a').text(); //convert to string for error handling later
 
-        // Collect the Article Link (contained within the "a" tag of the "h2" in the "header" of "this")
-        result.link = $(this).children('a').attr('href');
+      // Collect the Article Link (contained within the "a" tag of the "h2" in the "header" of "this")
+      result.link = $(this).children('a').attr('href');
 
+      if (result.title !== "") {
 
-        if(result.title !== ""){
+        if (titlesArray.indexOf(result.title) == -1) {
 
-          if(titlesArray.indexOf(result.title) == -1){
+          titlesArray.push(result.title);
 
-            titlesArray.push(result.title);
-e
-            Article.count({ title: result.title}, function (err, test){
+          Article.count({
+            title: result.title
+          }, function(err, test) {
 
-              if(test == 0){
+            if (test == 0) {
 
-                var entry = new Article (result);
+              var entry = new Article(result);
 
-                // Save the entry to MongoDB
-                entry.save(function(err, doc) {
-                  // log any errors
-                  if (err) {
-                    console.log(err);
-                  }
-                  // or log the doc that was saved to the DB
-                  else {
-                    console.log(doc);
-                  }
-                });
+              // Save the entry to MongoDB
+              entry.save(function(err, doc) {
+                // log any errors
+                if (err) {
+                  console.log(err// or log the doc that was saved to the DB
+                  );
+                } else {
+                  console.log(doc);
+                }
+              });
 
-              }
+            } else {
+              console.log('Redundant Database Content. Not saved to DB.')
+            }
 
-              else{
-                console.log('Redundant Database Content. Not saved to DB.')
-              }
-
-            });
-        }
-
-        else{
+          });
+        } else {
           console.log('Redundant Hacker News Content. Not Saved to DB.')
         }
 
-      }
-
-      else{
+      } else {
         console.log('Empty Content. Not Saved to DB.')
       }
 
     });
-
 
     res.redirect("/articles");
 
@@ -115,10 +94,7 @@ e
 
 });
 
-
-
-router.post('/add/comment/:id', function (req, res){
-
+router.post('/add/comment/:id', function(req, res) {
 
   var articleId = req.params.id;
 
@@ -131,21 +107,24 @@ router.post('/add/comment/:id', function (req, res){
     content: commentContent
   };
 
-  var entry = new Comment (result);
+  var entry = new Comment(result);
 
   entry.save(function(err, doc) {
     // log any errors
     if (err) {
-      console.log(err);
-    }
-    // Or, relate the comment to the article
-    else {
+      console.log(err// Or, relate the comment to the article
+      );
+    } else {
 
-      Article.findOneAndUpdate({'_id': articleId}, {$push: {'comments':doc._id}}, {new: true})
+      Article.findOneAndUpdate({
+        '_id': articleId
+      }, {
+        $push: {
+          'comments': doc._id
+        }
+      }, {new: true}).exec(function(err, doc) {
 
-      .exec(function(err, doc){
-
-        if (err){
+        if (err) {
           console.log(err);
         } else {
 
@@ -157,22 +136,18 @@ router.post('/add/comment/:id', function (req, res){
 
 });
 
-
-
-
 // Delete a Comment Route
-router.post('/remove/comment/:id', function (req, res){
+router.post('/remove/comment/:id', function(req, res) {
 
   // Collect comment id
   var commentId = req.params.id;
 
   // Find and Delete the Comment using the Id
-  Comment.findByIdAndRemove(commentId, function (err, todo) {
+  Comment.findByIdAndRemove(commentId, function(err, todo) {
 
     if (err) {
       console.log(err);
-    }
-    else {
+    } else {
       // Send Success Header
       res.sendStatus(200);
     }
@@ -180,7 +155,6 @@ router.post('/remove/comment/:id', function (req, res){
   });
 
 });
-
 
 // Export Router to Server.js
 module.exports = router;
